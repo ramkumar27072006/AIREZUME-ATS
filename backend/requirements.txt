@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+python-multipart
+requests
+openai
+google-generativeai
+python-dotenv
+sentence-transformers
+pdfplumber
+python-docx
+jinja2
+reportlab
+Pillow<13
+
