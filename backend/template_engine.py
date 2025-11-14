@@ -1,18 +1,18 @@
 # backend/template_engine.py
 import os
 import tempfile
+import uuid
 from typing import Dict, Any
 from docx import Document
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import letter
-import uuid
+from fpdf import FPDF
 
 
 def generate_docx(enhanced: Dict[str, Any]) -> str:
     """
-    Generate DOCX from enhanced resume dict.
+    Generate a .docx file from enhanced resume data.
     """
     doc = Document()
+
     name = enhanced.get("name", "")
     summary = enhanced.get("summary", "")
     bullets = enhanced.get("bullets", []) or []
@@ -41,47 +41,28 @@ def generate_docx(enhanced: Dict[str, Any]) -> str:
     return path
 
 
-
-def generate_pdf_from_text(text: str, name: str = "Candidate") -> str:
+def generate_pdf_from_text(text: str, name: str = "candidate") -> str:
     """
-    Simple fallback PDF generator using reportlab.
-    Works on Windows, Linux, and Render.
+    Generate a PDF using fpdf2 (Render compatible).
     """
     tmpdir = tempfile.gettempdir()
     fname = f"resume_{uuid.uuid4().hex[:8]}.pdf"
     path = os.path.join(tmpdir, fname)
 
-    c = canvas.Canvas(path, pagesize=letter)
-    width, height = letter
-
-    margin = 50
-    y = height - margin
+    pdf = FPDF()
+    pdf.add_page()
+    pdf.set_auto_page_break(auto=True, margin=15)
 
     # Title
-    c.setFont("Helvetica-Bold", 14)
-    c.drawString(margin, y, name)
-    y -= 25
+    pdf.set_font("Arial", "B", 16)
+    pdf.cell(0, 10, name, ln=True)
 
     # Body
-    c.setFont("Helvetica", 10)
+    pdf.set_font("Arial", "", 11)
+
     for line in text.split("\n"):
-        if y < 50:
-            c.showPage()
-            y = height - margin
-            c.setFont("Helvetica", 10)
+        pdf.multi_cell(0, 8, line)
 
-        # wrap text manually
-        while len(line) > 100:
-            cut = line[:100]
-            last_space = cut.rfind(" ")
-            if last_space > 0:
-                cut = cut[:last_space]
-            c.drawString(margin, y, cut)
-            y -= 14
-            line = line[len(cut):].lstrip()
+    pdf.output(path)
 
-        c.drawString(margin, y, line)
-        y -= 14
-
-    c.save()
     return path
