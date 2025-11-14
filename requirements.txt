@@ -9,5 +9,6 @@ sentence-transformers
 pdfplumber
 python-docx
 jinja2
-fpdf2
+weasyprint
+docx
 Pillow<13
