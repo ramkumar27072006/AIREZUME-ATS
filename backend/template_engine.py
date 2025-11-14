@@ -7,9 +7,10 @@ from reportlab.pdfgen import canvas
 from reportlab.lib.pagesizes import letter
 import uuid
 
+
 def generate_docx(enhanced: Dict[str, Any]) -> str:
     """
-    Generate a .docx from enhanced dict and return path.
+    Generate DOCX from enhanced resume dict.
     """
     doc = Document()
     name = enhanced.get("name", "")
@@ -19,14 +20,15 @@ def generate_docx(enhanced: Dict[str, Any]) -> str:
 
     if name:
         doc.add_heading(name, level=1)
+
     if summary:
         doc.add_paragraph(summary)
+
     if bullets:
         doc.add_paragraph("")
         for b in bullets:
-            doc.add_paragraph(b, style='List Bullet')
+            doc.add_paragraph(b, style="List Bullet")
 
-    # Also append raw text at end
     if text:
         doc.add_paragraph("")
         doc.add_paragraph(text)
@@ -35,11 +37,15 @@ def generate_docx(enhanced: Dict[str, Any]) -> str:
     fname = f"enhanced_{uuid.uuid4().hex[:8]}.docx"
     path = os.path.join(tmpdir, fname)
     doc.save(path)
+
     return path
 
-def generate_pdf_from_text(text: str, name: str = "candidate") -> str:
+
+
+def generate_pdf_from_text(text: str, name: str = "Candidate") -> str:
     """
-    Simple PDF generation using reportlab. Returns file path.
+    Simple fallback PDF generator using reportlab.
+    Works on Windows, Linux, and Render.
     """
     tmpdir = tempfile.gettempdir()
     fname = f"resume_{uuid.uuid4().hex[:8]}.pdf"
@@ -47,37 +53,35 @@ def generate_pdf_from_text(text: str, name: str = "candidate") -> str:
 
     c = canvas.Canvas(path, pagesize=letter)
     width, height = letter
+
     margin = 50
-    max_width = width - 2 * margin
     y = height - margin
 
     # Title
     c.setFont("Helvetica-Bold", 14)
     c.drawString(margin, y, name)
-    y -= 24
+    y -= 25
 
+    # Body
     c.setFont("Helvetica", 10)
-    lines = text.splitlines()
-    for line in lines:
-        # wrap long lines
-        while line and y > margin:
-            if len(line) < 90:
-                c.drawString(margin, y, line)
-                y -= 14
-                break
-            else:
-                # take slice approx
-                part = line[:90]
-                # try to cut at space
-                last_space = part.rfind(" ")
-                if last_space > 0:
-                    part = line[:last_space]
-                c.drawString(margin, y, part)
-                y -= 14
-                line = line[len(part):].lstrip()
-        if y <= margin + 20:
+    for line in text.split("\n"):
+        if y < 50:
             c.showPage()
             y = height - margin
             c.setFont("Helvetica", 10)
+
+        # wrap text manually
+        while len(line) > 100:
+            cut = line[:100]
+            last_space = cut.rfind(" ")
+            if last_space > 0:
+                cut = cut[:last_space]
+            c.drawString(margin, y, cut)
+            y -= 14
+            line = line[len(cut):].lstrip()
+
+        c.drawString(margin, y, line)
+        y -= 14
+
     c.save()
     return path
