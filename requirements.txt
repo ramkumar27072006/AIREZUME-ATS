@@ -9,6 +9,10 @@ sentence-transformers
 pdfplumber
 python-docx
 jinja2
-weasyprint
+
+# PDF generation
+reportlab         # <-- REQUIRED
+Pillow<13         # compatible with ReportLab
 docx
-Pillow<13
+
+# Remove WeasyPrint (not compatible on Render unless system libs installed)
